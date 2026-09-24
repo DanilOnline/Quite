@@ -1,0 +1,39 @@
+name: Check iOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: Quiet
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build app and widget
+        run: >
+          xcodebuild -project Quiet.xcodeproj
+          -scheme Quiet
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quiet-simulator
+          path: Quiet/build/Build/Products/Debug-iphonesimulator/
